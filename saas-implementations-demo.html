@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaaS implementations demo — End-to-end & C-level alignment mock</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="demo-gate.css">
+  <style>
+    .demo-container { max-width: 760px; margin: 0 auto; padding: 1rem 0 4rem; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--accent); }
+    .demo-badge { display: inline-block; padding: 4px 10px; background: var(--accent-dim); color: var(--accent); font-size: 0.75rem; border-radius: 999px; margin-bottom: 1.5rem; }
+    .process-section { margin-bottom: 2rem; }
+    .process-section h2 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 0 0 1rem; }
+    .process-steps { display: grid; gap: 0.75rem; }
+    .process-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    .process-step-num { width: 32px; height: 32px; background: var(--accent-dim); color: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+    .process-step h3 { font-size: 0.9rem; font-weight: 600; margin: 0 0 0.25rem; color: var(--text); }
+    .process-step p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.45; }
+    .mock-section { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .mock-section h2 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 0 0 0.75rem; }
+    .mock-note { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem; text-align: center; }
+    .kpi-card .kpi-value { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+    .kpi-card .kpi-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .pipeline-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .pipeline-wrap .pipeline-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .pipeline-phases { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .pipeline-phases .phase {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+    }
+    .pipeline-phases .phase.done { border-color: var(--accent-dim); background: rgba(0,212,170,0.08); color: var(--accent); }
+    .pipeline-phases .phase.current { border-color: var(--accent); background: var(--accent-dim); color: var(--text); }
+    .pipeline-phases .phase .phase-num { font-weight: 600; color: var(--text-muted); }
+    .pipeline-phases .phase.done .phase-num { color: var(--accent); }
+    .pipeline-phases .arrow { color: var(--text-muted); font-size: 0.9rem; }
+    .funnel-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+    .funnel-wrap .funnel-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .funnel-stages { display: flex; flex-direction: column; gap: 0.5rem; }
+    .funnel-stages .stage {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 1rem;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .funnel-stages .stage .stage-name { font-weight: 500; color: var(--text); }
+    .funnel-stages .stage .stage-value { color: var(--accent); font-weight: 600; }
+    .funnel-stages .stage .stage-pct { font-size: 0.8rem; color: var(--text-muted); margin-left: 0.5rem; }
+    .alignment-wrap { margin-top: 1.5rem; }
+    .alignment-wrap .alignment-title { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+    .alignment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 500px) { .alignment-grid { grid-template-columns: 1fr; } }
+    .alignment-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      font-size: 0.85rem;
+    }
+    .alignment-card h4 { font-size: 0.8rem; color: var(--accent); margin: 0 0 0.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    .alignment-card ul { margin: 0; padding-left: 1rem; color: var(--text-muted); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div id="demo-gate-overlay" class="demo-gate">
+    <a href="projects.html" class="demo-gate-close" title="Back to projects">×</a>
+    <div class="demo-gate-box">
+      <p class="demo-gate-message">If you're interested in seeing more of this project, contact me at <a href="mailto:balam_mota@berkeley.edu">balam_mota@berkeley.edu</a> to get the password.</p>
+      <input type="password" id="demo-gate-password" placeholder="Password" autocomplete="off" />
+      <button type="button" id="demo-gate-submit">Submit</button>
+      <p id="demo-gate-error" class="demo-gate-error" style="display:none;"></p>
+    </div>
+  </div>
+  <div id="demo-content">
+  <div class="page-bg"></div>
+  <nav class="centered-nav">
+    <a href="index.html">About</a>
+    <a href="projects.html" class="active">Projects</a>
+    <a href="https://drive.google.com/file/d/13_WnJ9CQ838ywYle7deJwudR2b_ydRBC/view?usp=sharing" target="_blank" rel="noopener">Resume</a>
+    <a class="btn-contact" href="mailto:balam_mota@berkeley.edu">Contact</a>
+  </nav>
+
+  <main class="main">
+    <div class="demo-container">
+      <a href="projects.html" class="back-link">← Back to Projects</a>
+      <span class="demo-badge">Mock · fake data · illustrates implementation & PoV flow</span>
+
+      <section class="process-section">
+        <h2>How this was built</h2>
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="process-step-num">1</div>
+            <div>
+              <h3>Discovery & scope</h3>
+              <p>Defined scope with the customer: sites, data sources, compliance needs. Aligned internal teams (sales, success, engineering) and customer stakeholders on timeline, deliverables, and success criteria so everyone had one version of the truth.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">2</div>
+            <div>
+              <h3>C-level & stakeholder alignment</h3>
+              <p>Kept C-level and decision-makers aligned on scope and outcomes—no surprises at go-live. Translated technical progress into business impact (e.g. data completeness, time-to-value) so compliance and leadership could see value early.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">3</div>
+            <div>
+              <h3>Technical delivery & go-live</h3>
+              <p>Ran implementations as technical and project lead: data/API setup, configuration, training, and cutover. Delivered 700+ sites with ~30% faster time-to-go-live and &gt;95% data completeness at launch by reusing playbooks and keeping risks visible.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">4</div>
+            <div>
+              <h3>Proof-of-value → contract</h3>
+              <p>Drove PoV and technical evaluations: demos and trials that showed platform capabilities in the customer’s context. Translated that into business impact for decision-makers; contributed to ~45% PoV-to-contract conversion and $500K qualified pipeline.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mock-section">
+        <h2>Mock: Implementation pipeline & PoV funnel</h2>
+        <p class="mock-note">Fake data. Represents the kind of pipeline and funnel we tracked for implementations and PoV conversions.</p>
+
+        <div class="kpi-row">
+          <div class="kpi-card"><div class="kpi-value">700+</div><div class="kpi-label">Sites delivered</div></div>
+          <div class="kpi-card"><div class="kpi-value">~30%</div><div class="kpi-label">Faster time-to-go-live</div></div>
+          <div class="kpi-card"><div class="kpi-value">&gt;95%</div><div class="kpi-label">Data completeness at launch</div></div>
+          <div class="kpi-card"><div class="kpi-value">~45%</div><div class="kpi-label">PoV → contract</div></div>
+          <div class="kpi-card"><div class="kpi-value">$500K</div><div class="kpi-label">Qualified pipeline</div></div>
+        </div>
+
+        <div class="pipeline-wrap">
+          <div class="pipeline-title">Implementation pipeline (mock) — single engagement</div>
+          <div class="pipeline-phases">
+            <div class="phase done"><span class="phase-num">1</span> Kickoff & scope</div>
+            <span class="arrow">→</span>
+            <div class="phase done"><span class="phase-num">2</span> Data / API</div>
+            <span class="arrow">→</span>
+            <div class="phase current"><span class="phase-num">3</span> Training</div>
+            <span class="arrow">→</span>
+            <div class="phase"><span class="phase-num">4</span> Go-live</div>
+          </div>
+        </div>
+
+        <div class="funnel-wrap">
+          <div class="funnel-title">PoV funnel (mock)</div>
+          <div class="funnel-stages">
+            <div class="stage"><span class="stage-name">Lead / opportunity</span><span class="stage-value">100</span><span class="stage-pct">100%</span></div>
+            <div class="stage"><span class="stage-name">Proof-of-value started</span><span class="stage-value">52</span><span class="stage-pct">52%</span></div>
+            <div class="stage"><span class="stage-name">PoV → contract</span><span class="stage-value">23</span><span class="stage-pct">~45%</span></div>
+          </div>
+        </div>
+
+        <div class="alignment-wrap">
+          <div class="alignment-title">Stakeholder alignment (mock)</div>
+          <div class="alignment-grid">
+            <div class="alignment-card">
+              <h4>Internal</h4>
+              <ul>
+                <li>Sales: scope, timeline, handoff</li>
+                <li>Success: adoption, support</li>
+                <li>Engineering: API, config</li>
+              </ul>
+            </div>
+            <div class="alignment-card">
+              <h4>Customer (C-level / compliance)</h4>
+              <ul>
+                <li>Scope & success criteria</li>
+                <li>Data completeness at go-live</li>
+                <li>Time-to-value, ROI</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  </div>
+  <script src="demo-gate.js"></script>
+</body>
+</html>

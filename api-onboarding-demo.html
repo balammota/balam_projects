@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API-led onboarding demo — Data ingestion & validation mock</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="demo-gate.css">
+  <style>
+    .demo-container { max-width: 700px; margin: 0 auto; padding: 1rem 0 4rem; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--accent); }
+    .demo-badge { display: inline-block; padding: 4px 10px; background: var(--accent-dim); color: var(--accent); font-size: 0.75rem; border-radius: 999px; margin-bottom: 1.5rem; }
+    .process-section { margin-bottom: 2rem; }
+    .process-section h2 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 0 0 1rem; }
+    .process-steps { display: grid; gap: 0.75rem; }
+    .process-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    .process-step-num { width: 32px; height: 32px; background: var(--accent-dim); color: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+    .process-step h3 { font-size: 0.9rem; font-weight: 600; margin: 0 0 0.25rem; color: var(--text); }
+    .process-step p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.45; }
+    .mock-section { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .mock-section h2 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 0 0 0.75rem; }
+    .mock-note { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
+    .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem; text-align: center; }
+    .kpi-card .kpi-value { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+    .kpi-card .kpi-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .validator-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+    .validator-wrap .suggest-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .validator-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+    .validator-chips button {
+      padding: 0.4rem 0.75rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .validator-chips button:hover { border-color: var(--accent); color: var(--accent); }
+    .validator-wrap textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font-mono), monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+      margin-bottom: 0.75rem;
+    }
+    .validator-wrap textarea:focus { outline: none; border-color: var(--accent); }
+    .validator-wrap textarea::placeholder { color: var(--text-muted); }
+    .validator-wrap .btn-validate {
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: var(--bg-deep);
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .validator-wrap .btn-validate:hover { opacity: 0.95; }
+    .validator-result { margin-top: 1rem; padding: 1rem; border-radius: var(--radius); font-size: 0.9rem; display: none; }
+    .validator-result.visible { display: block; }
+    .validator-result.success { background: rgba(0,212,170,0.1); border: 1px solid var(--accent-dim); }
+    .validator-result.error { background: rgba(230,92,92,0.1); border: 1px solid rgba(230,92,92,0.3); }
+    .validator-result .result-title { font-weight: 600; margin-bottom: 0.35rem; }
+    .validator-result.success .result-title { color: var(--accent); }
+    .validator-result.error .result-title { color: #e65c5c; }
+    .validator-result .result-detail { font-size: 0.85rem; color: var(--text-muted); }
+    .validator-result ul { margin: 0.35rem 0 0; padding-left: 1.2rem; color: var(--text-muted); font-size: 0.85rem; }
+    .schema-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; }
+    .ingestion-table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-top: 1rem; }
+    .ingestion-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .ingestion-table th, .ingestion-table td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .ingestion-table th { background: rgba(255,255,255,0.04); color: var(--text-muted); font-weight: 600; }
+    .ingestion-table tr:last-child td { border-bottom: none; }
+    .ingestion-table .status-ok { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div id="demo-gate-overlay" class="demo-gate">
+    <a href="projects.html" class="demo-gate-close" title="Back to projects">×</a>
+    <div class="demo-gate-box">
+      <p class="demo-gate-message">If you're interested in seeing more of this project, contact me at <a href="mailto:balam_mota@berkeley.edu">balam_mota@berkeley.edu</a> to get the password.</p>
+      <input type="password" id="demo-gate-password" placeholder="Password" autocomplete="off" />
+      <button type="button" id="demo-gate-submit">Submit</button>
+      <p id="demo-gate-error" class="demo-gate-error" style="display:none;"></p>
+    </div>
+  </div>
+  <div id="demo-content">
+  <div class="page-bg"></div>
+  <nav class="centered-nav">
+    <a href="index.html">About</a>
+    <a href="projects.html" class="active">Projects</a>
+    <a href="https://drive.google.com/file/d/13_WnJ9CQ838ywYle7deJwudR2b_ydRBC/view?usp=sharing" target="_blank" rel="noopener">Resume</a>
+    <a class="btn-contact" href="mailto:balam_mota@berkeley.edu">Contact</a>
+  </nav>
+
+  <main class="main">
+    <div class="demo-container">
+      <a href="projects.html" class="back-link">← Back to Projects</a>
+      <span class="demo-badge">Mock · no real API · illustrates validation & ingestion flow</span>
+
+      <section class="process-section">
+        <h2>How this was built</h2>
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="process-step-num">1</div>
+            <div>
+              <h3>API-led strategy & schema design</h3>
+              <p>Defined REST API contracts for customer data ingestion so systems could push records instead of manual entry. Designed schemas (required fields, types, formats) so that invalid data was rejected before it reached the platform.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">2</div>
+            <div>
+              <h3>Validation layer</h3>
+              <p>Implemented server-side validation against the schema: missing fields, wrong types, or invalid values return clear errors so customers could fix payloads and retry. This cut bad data at the gate and reduced downstream errors by ~60%.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">3</div>
+            <div>
+              <h3>Ingestion & repeatable onboarding</h3>
+              <p>Valid payloads were ingested into the platform on a schedule or in real time. Combined with training and change management, this gave a repeatable onboarding playbook: 1000+ records/month automated, ~40% less manual effort, and fewer post-launch support tickets.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mock-section">
+        <h2>Mock: Validate a payload (schema check)</h2>
+        <p class="mock-note">Fake validation. In the real system, the API validated incoming JSON against the schema before ingestion.</p>
+
+        <div class="kpi-row">
+          <div class="kpi-card"><div class="kpi-value">1000+</div><div class="kpi-label">Records/month (mock)</div></div>
+          <div class="kpi-card"><div class="kpi-value">~40%</div><div class="kpi-label">Less manual effort</div></div>
+          <div class="kpi-card"><div class="kpi-value">~60%</div><div class="kpi-label">Fewer data errors</div></div>
+        </div>
+
+        <div class="validator-wrap">
+          <div class="suggest-label">Try a sample payload — use chips or edit JSON, then Validate:</div>
+          <div class="validator-chips" id="validatorChips">
+            <button type="button" data-payload="valid">Valid payload</button>
+            <button type="button" data-payload="missing">Missing required field</button>
+            <button type="button" data-payload="invalid_type">Invalid type</button>
+          </div>
+          <textarea id="payloadInput" placeholder='{"site_id": "...", "name": "...", "value": 0, "date": "YYYY-MM-DD"}'></textarea>
+          <p class="schema-hint">Mock schema: site_id (string), name (string), value (number), date (string, YYYY-MM-DD). All required.</p>
+          <button type="button" class="btn-validate" id="btnValidate">Validate</button>
+          <div class="validator-result" id="validatorResult">
+            <div class="result-title" id="resultTitle">—</div>
+            <div class="result-detail" id="resultDetail"></div>
+            <ul id="resultList"></ul>
+          </div>
+        </div>
+
+        <div class="ingestion-table-wrap">
+          <div class="schema-hint" style="padding: 0.5rem 0.75rem 0 0;">Recent ingestions (mock)</div>
+          <table class="ingestion-table">
+            <thead>
+              <tr>
+                <th>Site ID</th>
+                <th>Name</th>
+                <th>Value</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>SITE-101</td><td>Tank Level</td><td>85</td><td>2026-01-15</td><td class="status-ok">Ingested</td></tr>
+              <tr><td>SITE-102</td><td>pH</td><td>7.2</td><td>2026-01-15</td><td class="status-ok">Ingested</td></tr>
+              <tr><td>SITE-103</td><td>Flow Rate</td><td>120</td><td>2026-01-14</td><td class="status-ok">Ingested</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      var SAMPLES = {
+        valid: '{\n  "site_id": "SITE-001",\n  "name": "Tank Level",\n  "value": 85,\n  "date": "2026-01-15"\n}',
+        missing: '{\n  "name": "Tank Level",\n  "value": 85,\n  "date": "2026-01-15"\n}',
+        invalid_type: '{\n  "site_id": "SITE-001",\n  "name": "Tank Level",\n  "value": "eighty-five",\n  "date": "2026-01-15"\n}'
+      };
+
+      var input = document.getElementById('payloadInput');
+      var resultEl = document.getElementById('validatorResult');
+      var resultTitle = document.getElementById('resultTitle');
+      var resultDetail = document.getElementById('resultDetail');
+      var resultList = document.getElementById('resultList');
+
+      function runValidation() {
+        var raw = input.value.trim();
+        resultList.innerHTML = '';
+        resultEl.classList.remove('visible', 'success', 'error');
+
+        var data;
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          resultEl.classList.add('visible', 'error');
+          resultTitle.textContent = 'Invalid JSON';
+          resultDetail.textContent = 'Payload must be valid JSON.';
+          return;
+        }
+
+        var errors = [];
+        if (!data.site_id || typeof data.site_id !== 'string') errors.push('site_id: required, must be string');
+        if (!data.name || typeof data.name !== 'string') errors.push('name: required, must be string');
+        if (data.value === undefined || data.value === null || typeof data.value !== 'number') errors.push('value: required, must be number');
+        if (!data.date || typeof data.date !== 'string') errors.push('date: required, must be string (YYYY-MM-DD)');
+
+        if (errors.length > 0) {
+          resultEl.classList.add('visible', 'error');
+          resultTitle.textContent = 'Schema validation failed';
+          resultDetail.textContent = 'Errors:';
+          errors.forEach(function(e) {
+            var li = document.createElement('li');
+            li.textContent = e;
+            resultList.appendChild(li);
+          });
+        } else {
+          resultEl.classList.add('visible', 'success');
+          resultTitle.textContent = 'Valid — ready to ingest';
+          resultDetail.textContent = 'Payload passes schema. In the real system this would be ingested and reflected in the platform.';
+        }
+      }
+
+      document.getElementById('btnValidate').onclick = runValidation;
+      document.getElementById('validatorChips').querySelectorAll('button').forEach(function(btn) {
+        btn.onclick = function() {
+          var key = btn.getAttribute('data-payload');
+          input.value = SAMPLES[key] || SAMPLES.valid;
+          runValidation();
+        };
+      });
+
+      input.value = SAMPLES.valid;
+    })();
+  </script>
+  </div>
+  <script src="demo-gate.js"></script>
+</body>
+</html>

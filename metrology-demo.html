@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metrology & ML demo — SPC & defect classification mock</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="demo-gate.css">
+  <style>
+    .demo-container { max-width: 780px; margin: 0 auto; padding: 1rem 0 4rem; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--accent); }
+    .demo-badge { display: inline-block; padding: 4px 10px; background: var(--accent-dim); color: var(--accent); font-size: 0.75rem; border-radius: 999px; margin-bottom: 1.5rem; }
+    .process-section { margin-bottom: 2rem; }
+    .process-section h2 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 0 0 1rem; }
+    .process-steps { display: grid; gap: 0.75rem; }
+    .process-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    .process-step-num { width: 32px; height: 32px; background: var(--accent-dim); color: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+    .process-step h3 { font-size: 0.9rem; font-weight: 600; margin: 0 0 0.25rem; color: var(--text); }
+    .process-step p { font-size: 0.85rem; color: var(--text-muted); margin: 0; line-height: 1.45; }
+    .mock-section { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .mock-section h2 { font-size: 1.1rem; font-weight: 600; color: var(--text); margin: 0 0 0.75rem; }
+    .mock-note { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
+    @media (max-width: 560px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem; text-align: center; }
+    .kpi-card .kpi-value { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+    .kpi-card .kpi-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .spc-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem; }
+    .spc-wrap .spc-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .spc-chart { height: 180px; position: relative; display: flex; align-items: flex-end; gap: 4px; padding: 10px 0; }
+    .spc-chart .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+    .spc-chart .bar { width: 100%; max-width: 24px; border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.3s; }
+    .spc-chart .bar.in-control { background: var(--accent); opacity: 0.8; }
+    .spc-chart .bar.out-control { background: #e65c5c; }
+    .spc-chart .bar-label { font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; }
+    .spc-legend { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; }
+    .spc-legend span { display: flex; align-items: center; gap: 0.35rem; }
+    .spc-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .classifier-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+    .classifier-wrap .suggest-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .classifier-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+    .classifier-chips button {
+      padding: 0.4rem 0.75rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .classifier-chips button:hover { border-color: var(--accent); color: var(--accent); }
+    .classifier-result { margin-top: 1rem; padding: 1rem; background: rgba(0,212,170,0.1); border: 1px solid var(--accent-dim); border-radius: var(--radius); font-size: 0.9rem; display: none; }
+    .classifier-result.visible { display: block; }
+    .classifier-result .result-class { font-weight: 600; color: var(--accent); }
+    .classifier-result .result-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem; }
+    .heatmap-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem; }
+    .heatmap-wrap .heatmap-title { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .heatmap-sub { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .wafer-heatmap {
+      display: inline-grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 2px;
+      max-width: 100%;
+      aspect-ratio: 1;
+      margin: 0 auto;
+    }
+    .wafer-heatmap .cell {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 2px;
+      min-width: 8px;
+      min-height: 8px;
+    }
+    .heatmap-legend { display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; flex-wrap: wrap; }
+    .heatmap-legend .legend-bar { display: flex; width: 120px; height: 10px; border-radius: 4px; overflow: hidden; }
+    .heatmap-legend .legend-bar span { flex: 1; }
+  </style>
+</head>
+<body>
+  <div id="demo-gate-overlay" class="demo-gate">
+    <a href="projects.html" class="demo-gate-close" title="Back to projects">×</a>
+    <div class="demo-gate-box">
+      <p class="demo-gate-message">If you're interested in seeing more of this project, contact me at <a href="mailto:balam_mota@berkeley.edu">balam_mota@berkeley.edu</a> to get the password.</p>
+      <input type="password" id="demo-gate-password" placeholder="Password" autocomplete="off" />
+      <button type="button" id="demo-gate-submit">Submit</button>
+      <p id="demo-gate-error" class="demo-gate-error" style="display:none;"></p>
+    </div>
+  </div>
+  <div id="demo-content">
+  <div class="page-bg"></div>
+  <nav class="centered-nav">
+    <a href="index.html">About</a>
+    <a href="projects.html" class="active">Projects</a>
+    <a href="https://drive.google.com/file/d/13_WnJ9CQ838ywYle7deJwudR2b_ydRBC/view?usp=sharing" target="_blank" rel="noopener">Resume</a>
+    <a class="btn-contact" href="mailto:balam_mota@berkeley.edu">Contact</a>
+  </nav>
+
+  <main class="main">
+    <div class="demo-container">
+      <a href="projects.html" class="back-link">← Back to Projects</a>
+      <span class="demo-badge">Mock · fake data · no real ML or backend</span>
+
+      <section class="process-section">
+        <h2>How this was built</h2>
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="process-step-num">1</div>
+            <div>
+              <h3>Metrology data pipeline</h3>
+              <p>Ingested and processed 4M+ metrology records; moved from batch queues to near-real-time analytics so defect resolution could happen in hours instead of days (~30% efficiency gain).</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">2</div>
+            <div>
+              <h3>Statistical Process Control (SPC)</h3>
+              <p>Owned SPC charts and control limits to detect process deviations early; fed alerts into operational response so the fab could react before yield impact.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">3</div>
+            <div>
+              <h3>Wafer defect heat maps</h3>
+              <p>Used parsed output from metrology tools (position data per defect) to build heat maps that showed where on the wafer defects clustered. This spatial view helped identify edge vs center patterns, tool-specific signatures, and guided root cause and process fixes.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">4</div>
+            <div>
+              <h3>ML defect classification (Random Forest)</h3>
+              <p>Designed, trained, and deployed a Random Forest model for automatic defect classification (ADC); reduced manual review by ~40% while improving labeling consistency.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mock-section">
+        <h2>Mock: SPC chart & defect classifier</h2>
+        <p class="mock-note">Fake data. In the real system, the SPC chart came from live metrology data and the classifier was a trained model.</p>
+
+        <div class="kpi-row">
+          <div class="kpi-card"><div class="kpi-value">4.2M+</div><div class="kpi-label">Records (mock)</div></div>
+          <div class="kpi-card"><div class="kpi-value">~30%</div><div class="kpi-label">Efficiency gain</div></div>
+          <div class="kpi-card"><div class="kpi-value">~40%</div><div class="kpi-label">Less manual review</div></div>
+          <div class="kpi-card"><div class="kpi-value">1</div><div class="kpi-label">Deviation (mock)</div></div>
+        </div>
+
+        <div class="spc-wrap">
+          <div class="spc-title">SPC — Process parameter (mock) · UCL/LCL</div>
+          <div class="spc-chart" id="spcChart">
+            <div class="bar-wrap"><div class="bar in-control" style="height: 45%;"></div><div class="bar-label">1</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 52%;"></div><div class="bar-label">2</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 48%;"></div><div class="bar-label">3</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 55%;"></div><div class="bar-label">4</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 50%;"></div><div class="bar-label">5</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 58%;"></div><div class="bar-label">6</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 62%;"></div><div class="bar-label">7</div></div>
+            <div class="bar-wrap"><div class="bar out-control" style="height: 92%;"></div><div class="bar-label">8</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 51%;"></div><div class="bar-label">9</div></div>
+            <div class="bar-wrap"><div class="bar in-control" style="height: 49%;"></div><div class="bar-label">10</div></div>
+          </div>
+          <div class="spc-legend">
+            <span><span class="dot" style="background: var(--accent);"></span> In control</span>
+            <span><span class="dot" style="background: #e65c5c;"></span> Deviation (point 8)</span>
+          </div>
+        </div>
+
+        <div class="heatmap-wrap">
+          <div class="heatmap-title">Wafer defect heat map (mock)</div>
+          <div class="heatmap-sub">Built from parsed tool output — defect count by position on wafer. High = more defects (hot).</div>
+          <div class="wafer-heatmap" id="waferHeatmap"></div>
+          <div class="heatmap-legend">
+            <span>Low</span>
+            <div class="legend-bar">
+              <span style="background: rgba(0,212,170,0.15);"></span>
+              <span style="background: rgba(0,212,170,0.4);"></span>
+              <span style="background: rgba(0,212,170,0.7);"></span>
+              <span style="background: #00d4aa;"></span>
+              <span style="background: #e65c5c;"></span>
+            </div>
+            <span>High</span>
+          </div>
+        </div>
+
+        <div class="classifier-wrap">
+          <div class="suggest-label">Mock defect classifier — pick a sample to “classify”:</div>
+          <div class="classifier-chips" id="classifierChips">
+            <button type="button" data-defect="particle">Particle</button>
+            <button type="button" data-defect="scratch">Scratch</button>
+            <button type="button" data-defect="contamination">Contamination</button>
+            <button type="button" data-defect="crack">Crack</button>
+            <button type="button" data-defect="residue">Residue</button>
+          </div>
+          <div class="classifier-result" id="classifierResult">
+            <span class="result-class" id="resultClass">—</span>
+            <div class="result-meta" id="resultMeta">Confidence and model info (mock)</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      var MOCK_CLASSES = {
+        particle:     { label: 'Particle', confidence: 94 },
+        scratch:      { label: 'Scratch', confidence: 89 },
+        contamination: { label: 'Contamination', confidence: 91 },
+        crack:        { label: 'Crack', confidence: 87 },
+        residue:      { label: 'Residue', confidence: 92 }
+      };
+      var resultEl = document.getElementById('classifierResult');
+      var resultClassEl = document.getElementById('resultClass');
+      var resultMetaEl = document.getElementById('resultMeta');
+
+      function showResult(key) {
+        var c = MOCK_CLASSES[key] || MOCK_CLASSES.particle;
+        resultClassEl.textContent = c.label;
+        resultMetaEl.textContent = 'Confidence: ' + c.confidence + '% (mock — Random Forest ADC)';
+        resultEl.classList.add('visible');
+      }
+
+      document.getElementById('classifierChips').querySelectorAll('button').forEach(function(btn) {
+        btn.onclick = function() { showResult(btn.getAttribute('data-defect')); };
+      });
+
+      // Wafer heat map: 12x12 grid, mock intensities (0=low, 4=high). Simulate edge + center cluster.
+      var heatLevels = [
+        [1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,1,1,0,0,0,0,1],
+        [1,0,0,0,1,2,2,1,0,0,0,1],
+        [1,0,0,1,2,3,3,2,1,0,0,1],
+        [1,0,0,1,2,3,3,2,1,0,0,1],
+        [1,0,0,0,1,2,2,1,0,0,0,1],
+        [1,0,0,0,0,1,1,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,0,0,0,0,0,0,0,0,0,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1]
+      ];
+      var colors = [
+        'rgba(0,212,170,0.12)',
+        'rgba(0,212,170,0.35)',
+        'rgba(0,212,170,0.6)',
+        'rgba(0,212,170,0.9)',
+        '#e65c5c'
+      ];
+      var hm = document.getElementById('waferHeatmap');
+      for (var r = 0; r < 12; r++) {
+        for (var c = 0; c < 12; c++) {
+          var cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.style.background = colors[heatLevels[r][c]];
+          cell.title = 'Position ' + (r+1) + ',' + (c+1) + ' (mock)';
+          hm.appendChild(cell);
+        }
+      }
+    })();
+  </script>
+  </div>
+  <script src="demo-gate.js"></script>
+</body>
+</html>

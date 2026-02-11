@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard demo — SQL, data pipeline & Power BI mock</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="demo-gate.css">
+  <style>
+    .demo-container { max-width: 820px; margin: 0 auto; padding: 1rem 0 4rem; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--accent); }
+    .demo-badge { display: inline-block; padding: 4px 10px; background: var(--accent-dim); color: var(--accent); font-size: 0.75rem; border-radius: 999px; margin-bottom: 1.5rem; }
+    .process-section { margin-bottom: 2.5rem; }
+    .process-section h2 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 0 0 1rem; letter-spacing: -0.02em; }
+    .process-steps { display: grid; gap: 1rem; }
+    .process-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    .process-step-num {
+      width: 40px; height: 40px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700; font-size: 1rem;
+    }
+    .process-step h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.35rem; color: var(--text); }
+    .process-step p { font-size: 0.88rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+    .dashboard-mock { margin-top: 2rem; }
+    .dashboard-mock h2 { font-size: 1.15rem; font-weight: 600; color: var(--text); margin: 0 0 1rem; }
+    .dashboard-mock .mock-note { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      text-align: center;
+    }
+    .kpi-card .kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .kpi-card .kpi-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .chart-bar-wrap { margin-bottom: 1rem; }
+    .chart-bar-wrap .chart-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.35rem; color: var(--text-muted); }
+    .chart-bar-wrap .chart-bar-bg { height: 24px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+    .chart-bar-wrap .chart-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); border-radius: 6px; transition: width 0.4s; }
+    .dashboard-table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    .dashboard-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .dashboard-table th, .dashboard-table td { padding: 0.6rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .dashboard-table th { background: rgba(255,255,255,0.04); color: var(--text-muted); font-weight: 600; }
+    .dashboard-table tr:last-child td { border-bottom: none; }
+    .dashboard-table .status-ok { color: var(--accent); }
+    .dashboard-table .status-due { color: #e6b84a; }
+    .dashboard-table .status-over { color: #e65c5c; }
+    .downtime-section { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .downtime-section h3 { font-size: 0.95rem; font-weight: 600; color: var(--text); margin: 0 0 0.75rem; }
+    .downtime-stacked { margin-bottom: 0.75rem; }
+    .downtime-stacked .chart-label { margin-bottom: 0.35rem; }
+    .downtime-stacked .stacked-bar {
+      height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      background: rgba(255,255,255,0.06);
+    }
+    .downtime-stacked .stacked-bar .segment-up { background: linear-gradient(90deg, var(--accent-dim), var(--accent)); }
+    .downtime-stacked .stacked-bar .segment-down { background: linear-gradient(90deg, #e65c5c, #c94a4a); }
+    .downtime-legend { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+    .downtime-legend span { display: flex; align-items: center; gap: 0.4rem; }
+    .downtime-legend .dot-up { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+    .downtime-legend .dot-down { width: 10px; height: 10px; border-radius: 50%; background: #e65c5c; }
+  </style>
+</head>
+<body>
+  <div id="demo-gate-overlay" class="demo-gate">
+    <a href="projects.html" class="demo-gate-close" title="Back to projects">×</a>
+    <div class="demo-gate-box">
+      <p class="demo-gate-message">If you're interested in seeing more of this project, contact me at <a href="mailto:balam_mota@berkeley.edu">balam_mota@berkeley.edu</a> to get the password.</p>
+      <input type="password" id="demo-gate-password" placeholder="Password" autocomplete="off" />
+      <button type="button" id="demo-gate-submit">Submit</button>
+      <p id="demo-gate-error" class="demo-gate-error" style="display:none;"></p>
+    </div>
+  </div>
+  <div id="demo-content">
+  <div class="page-bg"></div>
+  <nav class="centered-nav">
+    <a href="index.html">About</a>
+    <a href="projects.html" class="active">Projects</a>
+    <a href="https://drive.google.com/file/d/13_WnJ9CQ838ywYle7deJwudR2b_ydRBC/view?usp=sharing" target="_blank" rel="noopener">Resume</a>
+    <a class="btn-contact" href="mailto:balam_mota@berkeley.edu">Contact</a>
+  </nav>
+
+  <main class="main">
+    <div class="demo-container">
+      <a href="projects.html" class="back-link">← Back to Projects</a>
+      <span class="demo-badge">Mock · fake data · represents pipeline & dashboard output</span>
+
+      <section class="process-section">
+        <h2>How this was built — end-to-end process</h2>
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="process-step-num">1</div>
+            <div>
+              <h3>Data mining & cleaning</h3>
+              <p>Pulled data from multiple sources (tool logs, maintenance records, MES). Cleaned and standardized formats, handled missing values, and aligned tool IDs and timestamps so everything could be joined and filtered consistently.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">2</div>
+            <div>
+              <h3>Data analysis</h3>
+              <p>Explored the data to define the right KPIs: what to track for maintenance compliance, cost drivers, and EPA reporting. Identified gaps (e.g. unmaintained tools) and validated definitions with operations before building reports.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">3</div>
+            <div>
+              <h3>SQL pipelines & automated dashboards</h3>
+              <p>Built SQL pipelines to aggregate and transform the cleaned data on a schedule. Connected Power BI to those pipelines so dashboards refresh automatically—single source of truth for tool status, maintenance KPIs, and cost trends.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-mock">
+        <h2>Mock dashboard — tool & maintenance KPIs</h2>
+        <p class="mock-note">Fake data below. In the real build, these numbers came from SQL pipelines and refreshed in Power BI.</p>
+
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-value">812</div>
+            <div class="kpi-label">Tools in fleet</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value">94%</div>
+            <div class="kpi-label">Maintenance compliance</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value">48</div>
+            <div class="kpi-label">Due this week</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value">-30%</div>
+            <div class="kpi-label">Cost vs prior year</div>
+          </div>
+        </div>
+
+        <div class="chart-bar-wrap">
+          <div class="chart-label"><span>Tools by status</span><span>Mock</span></div>
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" style="width: 72%;"></div>
+          </div>
+          <div class="chart-label" style="margin-top: 0.5rem;"><span>Released (72%)</span></div>
+        </div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" style="width: 18%;"></div>
+          </div>
+          <div class="chart-label"><span>PM due (18%)</span></div>
+        </div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-bg">
+            <div class="chart-bar-fill" style="width: 10%;"></div>
+          </div>
+          <div class="chart-label"><span>Down / hold (10%)</span></div>
+        </div>
+
+        <div class="downtime-section">
+          <h3>Tool downtime (maintenance) vs uptime — YTD</h3>
+          <div class="downtime-stacked">
+            <div class="chart-label"><span>Fleet availability · rest of year (mock)</span></div>
+            <div class="stacked-bar">
+              <div class="segment-up" style="width: 94%;" title="Uptime 94%"></div>
+              <div class="segment-down" style="width: 6%;" title="Downtime (PM) 6%"></div>
+            </div>
+          </div>
+          <div class="downtime-legend">
+            <span><span class="dot-up"></span> Uptime 94%</span>
+            <span><span class="dot-down"></span> Downtime from maintenance 6%</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <div class="chart-label" style="margin-bottom: 0.5rem;">Sample tool-level view (mock)</div>
+          <div class="dashboard-table-wrap">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Tool ID</th>
+                  <th>Module</th>
+                  <th>Last PM</th>
+                  <th>Next due</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>MET-101</td>
+                  <td>Defect metrology</td>
+                  <td>Jan 15, 2026</td>
+                  <td>Mar 15, 2026</td>
+                  <td class="status-ok">Released</td>
+                </tr>
+                <tr>
+                  <td>MET-102</td>
+                  <td>Defect metrology</td>
+                  <td>Dec 01, 2025</td>
+                  <td>Feb 01, 2026</td>
+                  <td class="status-due">PM due soon</td>
+                </tr>
+                <tr>
+                  <td>FSG-201</td>
+                  <td>Furnace</td>
+                  <td>Jan 08, 2026</td>
+                  <td>Mar 08, 2026</td>
+                  <td class="status-ok">Released</td>
+                </tr>
+                <tr>
+                  <td>ETCH-305</td>
+                  <td>Etch</td>
+                  <td>Nov 20, 2025</td>
+                  <td>Jan 20, 2026</td>
+                  <td class="status-over">Overdue</td>
+                </tr>
+                <tr>
+                  <td>CMP-401</td>
+                  <td>CMP</td>
+                  <td>Jan 12, 2026</td>
+                  <td>Mar 12, 2026</td>
+                  <td class="status-ok">Released</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  </div>
+  <script src="demo-gate.js"></script>
+</body>
+</html>

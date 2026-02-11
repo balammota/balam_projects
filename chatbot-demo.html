@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot demo — SOPs & documentation mock</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="demo-gate.css">
+  <style>
+    .demo-container { max-width: 640px; margin: 0 auto; padding: 1rem 0 4rem; }
+    .demo-header { text-align: center; margin-bottom: 1.5rem; }
+    .demo-header h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 0.35rem; }
+    .demo-header p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+    .demo-badge { display: inline-block; padding: 4px 10px; background: var(--accent-dim); color: var(--accent); font-size: 0.75rem; border-radius: 999px; margin-top: 0.5rem; }
+    .demo-suggestions { margin-bottom: 1rem; }
+    .demo-suggestions-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .demo-suggestions-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .demo-suggestions-chips button {
+      padding: 0.4rem 0.75rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .demo-suggestions-chips button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .chat-window {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 1rem 1.25rem;
+      overflow-y: auto;
+      max-height: 320px;
+    }
+    .chat-msg { margin-bottom: 1rem; }
+    .chat-msg.user { text-align: right; }
+    .chat-msg.user .chat-bubble { margin-left: auto; background: var(--accent-dim); color: var(--text); border-radius: 14px 14px 4px 14px; }
+    .chat-bubble {
+      display: inline-block;
+      max-width: 85%;
+      padding: 0.65rem 1rem;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      text-align: left;
+      background: rgba(255,255,255,0.05);
+      border-radius: 14px 14px 14px 4px;
+      border: 1px solid var(--border);
+    }
+    .chat-bubble .sop-title { font-weight: 600; color: var(--accent); margin-bottom: 0.35rem; font-size: 0.85rem; }
+    .chat-bubble .sop-id { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .chat-msg .chat-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .chat-input-wrap {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .chat-input-wrap input {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+    }
+    .chat-input-wrap input::placeholder { color: var(--text-muted); opacity: 0.8; }
+    .chat-input-wrap input:focus { outline: none; border-color: var(--accent); }
+    .chat-input-wrap button {
+      padding: 0.6rem 1.1rem;
+      background: var(--accent);
+      color: var(--bg-deep);
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .chat-input-wrap button:hover { opacity: 0.95; }
+    .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem; text-decoration: none; }
+    .back-link:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div id="demo-gate-overlay" class="demo-gate">
+    <a href="projects.html" class="demo-gate-close" title="Back to projects">×</a>
+    <div class="demo-gate-box">
+      <p class="demo-gate-message">If you're interested in seeing more of this project, contact me at <a href="mailto:balam_mota@berkeley.edu">balam_mota@berkeley.edu</a> to get the password.</p>
+      <input type="password" id="demo-gate-password" placeholder="Password" autocomplete="off" />
+      <button type="button" id="demo-gate-submit">Submit</button>
+      <p id="demo-gate-error" class="demo-gate-error" style="display:none;"></p>
+    </div>
+  </div>
+  <div id="demo-content">
+  <div class="page-bg"></div>
+  <nav class="centered-nav">
+    <a href="index.html">About</a>
+    <a href="projects.html" class="active">Projects</a>
+    <a href="https://drive.google.com/file/d/13_WnJ9CQ838ywYle7deJwudR2b_ydRBC/view?usp=sharing" target="_blank" rel="noopener">Resume</a>
+    <a class="btn-contact" href="mailto:balam_mota@berkeley.edu">Contact</a>
+  </nav>
+
+  <main class="main">
+    <div class="demo-container">
+      <a href="projects.html" class="back-link">← Back to Projects</a>
+      <div class="demo-header">
+        <h1>SOP & documentation chatbot — mock demo</h1>
+        <p>Example of an in-fab assistant that retrieves procedures and tool docs (fake data)</p>
+        <span class="demo-badge">Mock · no real backend</span>
+      </div>
+
+      <div class="demo-suggestions">
+        <p class="demo-suggestions-label">No real backend — try these to get a mock SOP:</p>
+        <div class="demo-suggestions-chips" id="suggestionChips">
+          <button type="button" data-query="How do I calibrate the metrology tool?">calibration</button>
+          <button type="button" data-query="safety checklist before maintenance">safety</button>
+          <button type="button" data-query="how to log a defect">defect</button>
+          <button type="button" data-query="tool startup procedure">startup</button>
+          <button type="button" data-query="preventive maintenance">maintenance</button>
+        </div>
+      </div>
+
+      <div class="chat-window">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg">
+            <div class="chat-bubble">
+              <div class="sop-id">System</div>
+              This is a mock. Use the suggestion chips above or type words like <strong>calibration</strong>, <strong>safety</strong>, <strong>defect</strong>, <strong>startup</strong>, or <strong>maintenance</strong> to get a fake SOP.
+            </div>
+            <div class="chat-time">Just now</div>
+          </div>
+        </div>
+        <div class="chat-input-wrap">
+          <input type="text" id="chatInput" placeholder="e.g. How do I calibrate the metrology tool?" autocomplete="off">
+          <button type="button" id="sendBtn">Send</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      var MOCK_SOPS = [
+        {
+          keywords: ['calibrat', 'metrology'],
+          id: 'SOP-MET-001',
+          title: 'Metrology tool calibration',
+          body: '1. Power on tool and allow 30 min warm-up. 2. Load reference wafer per spec. 3. Run auto-calibration sequence from main menu. 4. Verify offsets within ±0.5% before release. 5. Log calibration in MES.'
+        },
+        {
+          keywords: ['safety', 'hazard', 'ppe', 'before'],
+          id: 'SOP-SAF-002',
+          title: 'Safety checklist before maintenance',
+          body: 'Required: safety glasses, gloves, ESD wrist strap. Verify LOTO applied and tag visible. Confirm area clear and ventilation on. Sign off on work permit before starting.'
+        },
+        {
+          keywords: ['defect', 'log', 'wafer', 'classify'],
+          id: 'SOP-DEF-003',
+          title: 'Defect logging and classification',
+          body: '1. Capture defect image in ADC. 2. Assign class per defect library (particle, scratch, etc.). 3. Link to lot/wafer in MES. 4. If critical, flag for engineering review. 5. Save and close ticket.'
+        },
+        {
+          keywords: ['startup', 'power', 'start'],
+          id: 'SOP-OPS-004',
+          title: 'Tool startup procedure',
+          body: '1. Confirm utilities (N2, vacuum) within spec. 2. Power on in sequence: controller → pumps → process module. 3. Run self-check; resolve any faults before running wafers. 4. Check consumables and log in dashboard.'
+        },
+        {
+          keywords: ['maintenance', 'pm', 'preventive'],
+          id: 'SOP-MNT-005',
+          title: 'Preventive maintenance — general',
+          body: 'Follow PM schedule in CMMS. Replace filters and wear parts per BOM. Run diagnostics and record results. Update tool status to “released” only after sign-off. Attach checklist to work order.'
+        }
+      ];
+
+      function getTime() {
+        var d = new Date();
+        return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+      }
+
+      function findResponse(text) {
+        var t = text.toLowerCase().trim();
+        if (!t) return null;
+        for (var i = 0; i < MOCK_SOPS.length; i++) {
+          var sop = MOCK_SOPS[i];
+          for (var j = 0; j < sop.keywords.length; j++) {
+            if (t.indexOf(sop.keywords[j]) !== -1) {
+              return sop;
+            }
+          }
+        }
+        return MOCK_SOPS[Math.floor(Math.random() * MOCK_SOPS.length)];
+      }
+
+      function addMessage(isUser, html) {
+        var wrap = document.getElementById('chatMessages');
+        var msg = document.createElement('div');
+        msg.className = 'chat-msg' + (isUser ? ' user' : '');
+        msg.innerHTML = '<div class="chat-bubble">' + html + '</div><div class="chat-time">' + getTime() + '</div>';
+        wrap.appendChild(msg);
+        wrap.scrollTop = wrap.scrollHeight;
+      }
+
+      function send(optionalText) {
+        var input = document.getElementById('chatInput');
+        var text = (optionalText || input.value || '').trim();
+        if (!text) return;
+        input.value = '';
+        addMessage(true, text.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        var sop = findResponse(text);
+        var html = '<div class="sop-id">' + sop.id + '</div><div class="sop-title">' + sop.title + '</div>' + sop.body.replace(/\n/g, '<br>');
+        addMessage(false, html);
+      }
+
+      document.getElementById('sendBtn').onclick = function() { send(); };
+      document.getElementById('chatInput').onkeydown = function(e) {
+        if (e.key === 'Enter') send();
+      };
+      var chips = document.getElementById('suggestionChips');
+      if (chips) {
+        chips.querySelectorAll('button').forEach(function(btn) {
+          btn.onclick = function() { send(btn.getAttribute('data-query')); };
+        });
+      }
+    })();
+  </script>
+  </div>
+  <script src="demo-gate.js"></script>
+</body>
+</html>
